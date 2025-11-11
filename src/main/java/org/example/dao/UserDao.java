@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class UserDao {
 
@@ -36,20 +37,15 @@ public class UserDao {
         });
     }
 
-    private void executeInsideTransaction(HibernateAction action) {
+    private void executeInsideTransaction(Consumer<Session> action) {
         Transaction tx = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
-            action.execute(session);
+            action.accept(session);
             tx.commit();
         } catch (Exception e) {
             if (tx != null) tx.rollback();
             e.printStackTrace();
         }
-    }
-
-    @FunctionalInterface
-    private interface HibernateAction {
-        void execute(Session session);
     }
 }
