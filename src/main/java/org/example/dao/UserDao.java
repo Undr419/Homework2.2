@@ -3,12 +3,16 @@ package org.example.dao;
 import org.example.entity.User;
 import org.example.util.HibernateUtil;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 public class UserDao {
+
+    public UserDao(SessionFactory sessionFactory) {
+    }
 
     public void save(User user) {
         executeInsideTransaction(session -> session.persist(user));

@@ -7,7 +7,11 @@ import java.util.List;
 
 public class UserService {
 
-    private final UserDao userDao = new UserDao();
+    private final UserDao userDao;
+
+    public UserService(UserDao userDao) {
+        this.userDao = userDao;
+    }
 
     public void create(String name, String email, int age) {
         userDao.save(new User(name, email, age));
