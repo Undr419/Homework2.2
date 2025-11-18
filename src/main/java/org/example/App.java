@@ -1,77 +1,42 @@
 package org.example;
 
+import org.example.dao.UserDao;
 import org.example.entity.User;
 import org.example.service.UserService;
+import org.example.util.HibernateUtil;
+import org.hibernate.SessionFactory;
 
-import java.util.Scanner;
+import java.util.List;
 
 public class App {
-    private static final UserService service = new UserService();
-    private static final Scanner sc = new Scanner(System.in);
-
     public static void main(String[] args) {
-        boolean exit = false;
-        do {
-            System.out.println("""
-                    === User Service ===
-                    1. Create User
-                    2. Get User by ID
-                    3. Get All Users
-                    4. Update User
-                    5. Delete User
-                    0. Exit
-                    """);
-            System.out.println("Choose number:");
-            int choice = Integer.parseInt(sc.nextLine());
+        System.out.println("Starting application...");
 
-            switch (choice) {
-                case 1 -> create();
-                case 2 -> getById();
-                case 3 -> getAll();
-                case 4 -> update();
-                case 5 -> delete();
-                case 0 -> exit = true;
-                default -> System.out.println("Incorrect number!");
-            }
-        } while(!exit);
-    }
+        if (System.getProperty("DB_URL") == null) {
+            System.setProperty("DB_URL", "jdbc:postgresql://localhost:5432/userdb");
+        }
+        if (System.getProperty("DB_USER") == null) {
+            System.setProperty("DB_USER", "postgres");
+        }
+        if (System.getProperty("DB_PASSWORD") == null) {
+            System.setProperty("DB_PASSWORD", "postgres");
+        }
 
-    public static void create() {
-        System.out.println("Name: ");
-        String name = sc.nextLine();
-        System.out.println("Email: ");
-        String email = sc.nextLine();
-        System.out.println("Age: ");
-        int age = Integer.parseInt(sc.nextLine());
-        service.create(name, email, age);
-    }
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-    public static void getById() {
-        System.out.println("Enter ID: ");
-        Long id = Long.parseLong(sc.nextLine());
-        User user = service.get(id);
-        System.out.println(user != null ? user : "User not found");
-    }
+        UserDao userDao = new UserDao(sessionFactory);
+        UserService userService = new UserService(userDao);
 
-    public static void getAll() {
-        service.getAll().forEach(System.out::println);
-    }
+        System.out.println("Creating user...");
+        userService.create("Ivan", "abcd@mail.com", 25);
 
-    public static void update() {
-        System.out.println("Enter ID: ");
-        Long id = Long.parseLong(sc.nextLine());
-        System.out.println("New name: ");
-        String name = sc.nextLine();
-        System.out.println("New email: ");
-        String email = sc.nextLine();
-        System.out.println("New age: ");
-        int age = Integer.parseInt(sc.nextLine());
-        service.update(id, name, email, age);
-    }
+        System.out.println("Fetching all users...");
+        List<User> users = userService.getAll();
+        users.forEach(u ->
+                System.out.println(u.getId() + " | " + u.getName() + " | " + u.getEmail())
+        );
 
-    public static void delete() {
-        System.out.println("Enter ID: ");
-        Long id = Long.parseLong(sc.nextLine());
-        service.delete(id);
+        HibernateUtil.shutdown();
+        System.out.println("Application finished successfully.");
     }
 }
